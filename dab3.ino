@@ -318,6 +318,24 @@ void STREAM_GetProgrameText(unsigned char channel) {
 
 }
 
+void GetRssi(void) {
+	const char command[7] = {0xFE, 0x01, 0x17, 0x17, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 100);
+	Serial.print("  -"); Serial.print(data[6], DEC); Serial.print("dBm ");
+
+	sprintf(&rxdata[0], "%02u dBm", data[6]);
+	rxdata[7] = '\0';
+	spr.createSprite(320, 20);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_ORANGE);
+	render.printf(rxdata);
+	spr.pushSprite(70,170); 
+	spr.deleteSprite(); 
+
+}
+
 
 void STREAM_PlayDAB(unsigned char index ) {
 
@@ -489,6 +507,7 @@ void loop() {
 		num_int--;
 		//count++ ;
 		CheckStatus();
+		GetRssi();
 	}
 
 } // loop
