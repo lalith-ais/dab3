@@ -438,6 +438,24 @@ void GetClock(void) {
 	spr.deleteSprite(); 
 }
 
+
+void GetDataRate(void) {
+	int z ;
+	const char command[7] = {0xFE, 0x01, 0x47, 0x47, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 50);
+	z = data[6] << 8 | data[7] ;
+	sprintf(&rxdata[0], "%3u kbits/s", z ); 
+	rxdata[12] = '\0';
+	spr.createSprite(80, 20);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_YELLOW);
+	render.printf(rxdata);
+	spr.pushSprite(240,170);
+	spr.deleteSprite(); 
+}
+
 // state machine
 void CheckStatus (void) {
 	status = STREAM_GetPlayStatus();
@@ -448,6 +466,7 @@ void CheckStatus (void) {
 			if (status_flag & 0x80) ( GetClock());
 			if (status != last_status ) {
 				STREAM_GetProgrameText(channel);
+				GetDataRate();
 				last_status = status ;
 			}
 			break;
