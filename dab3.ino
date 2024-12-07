@@ -49,13 +49,14 @@ uint32_t cursorX;
 uint32_t cursorY=0;
 
 int totalChannels = 0;
-int channel = 0x00;
+unsigned char channel = 0x00;
 unsigned char status;
 unsigned char last_status = 0x03;
 bool update_flag = false;
 hw_timer_t * timer = NULL;
 int  num_int = 0;
 int count = 0;
+uint8_t status_flag = 0;
 
 
 // timer0 ISR 
@@ -176,9 +177,7 @@ void freeLines(LineNode* head) {
 	}
 }
 
-
-
-
+// T4B text is in UCS2
 void convertUCS2toUTF8(uint8_t* ucs2Data, int length, char* utf8Buffer, int utf8BufferSize) {
 	int utf8Index = 0;
 	// actaul data starts from 6  and ends at length-1
@@ -259,14 +258,12 @@ int STREAM_GetTotalProgram (void) {
 	return data[9]; // max 200 channels, hence one byte is ok
 }
 
-
-
-void STREAM_GetProgrameName (int ch) {
-	const char command[12] = {0xFE, 0x01, 0x2d, 0x2d, 0x00, 0x05, 0x00, 0x00, 0x00, ch, 0x01, 0xFD};
+void STREAM_GetProgrameName (unsigned char channel) {
+	const char command[12] = {0xFE, 0x01, 0x2d, 0x2d, 0x00, 0x05, 0x00, 0x00, 0x00, channel, 0x01, 0xFD};
 	writeReadUart(command, 12, 50);
 	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
 	// utf8Text can be directly written to TFT
-	Serial.println(utf8Text);
+	//Serial.println(utf8Text);
 	spr.createSprite(320, 40);
 	render.setDrawer(spr);
 	render.setFontColor(TFT_BLUE); // note font colour must be set as render.setfont
@@ -275,12 +272,58 @@ void STREAM_GetProgrameName (int ch) {
 	renderTextWithFontSize(utf8Text, fontSize);
 	spr.pushSprite(0,35);
 	spr.deleteSprite();
-
-
-
-
-
 }
+
+void STREAM_GetEnsembleName (unsigned char channel) {
+
+	const char command[12] = {0xFE, 0x01, 0x41, 0x41, 0x00, 0x05, 0x00, 0x00, 0x00, channel, 0x01, 0xFD};
+	writeReadUart(command, 12, 50);
+	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
+	//Serial.println(utf8Text);
+	spr.createSprite(320, 40);
+	render.setDrawer(spr);
+	render.setFontColor(TFT_CYAN); // note font colour must be set as render.se
+	cursorY=0; // this is required to start writing from top of sprite
+	int fontSize =18 ;
+	renderTextWithFontSize(utf8Text, fontSize);
+	spr.pushSprite(0,75);
+	spr.deleteSprite();
+}
+
+unsigned char STREAM_GetPlayStatus(void) {
+	const char command[7] =  {0xFE, 0x01, 0x10, 0x10, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 100);
+	status_flag= 0;
+	status_flag= data[8] ;
+	return data[6]; // 0=playing,1=searching,2=tuning,3=stream stop
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -340,9 +383,9 @@ void setup () {
 	totalChannels = STREAM_GetTotalProgram();
 	Serial.print("total channels :");
 	Serial.println(totalChannels);
-
 	Serial.print("playing channel :");
 	STREAM_GetProgrameName(channel);
+	STREAM_GetEnsembleName(channel);
 
 
 
@@ -365,6 +408,7 @@ void loop() {
 		if ( channel ==  totalChannels ) { channel-- ;}
 		pos = newPos;
 		STREAM_GetProgrameName(channel);
+		STREAM_GetEnsembleName(channel);
 		spr.createSprite(320, 20);
 		render.setDrawer(spr);
 		render.setFontSize(14);
