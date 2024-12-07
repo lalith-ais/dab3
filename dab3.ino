@@ -505,7 +505,7 @@ void CheckStatus (void) {
 			if (status != last_status ) {
 				STREAM_GetProgrameText(channel);
 				GetDataRate();
-				STREAM_GetServCompType();
+				//STREAM_GetServCompType(); 
 				last_status = status ;
 				spr.createSprite(80, 20);
 				render.setDrawer(spr);
@@ -513,7 +513,7 @@ void CheckStatus (void) {
 				render.setCursor(0,0);
 				render.setFontColor(TFT_GREEN);
 				render.printf("playing..");
-				spr.pushSprite(140,0);
+				spr.pushSprite(0,0);
 				spr.deleteSprite(); 
 
 			}
@@ -526,7 +526,7 @@ void CheckStatus (void) {
 			render.setCursor(0,0);
 			render.setFontColor(TFT_YELLOW);
 			render.printf("searching..");
-			spr.pushSprite(140,0);
+			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
 			last_status = status ;
 			break;
@@ -538,7 +538,7 @@ void CheckStatus (void) {
 			render.setCursor(0,0);
 			render.setFontColor(TFT_GREEN);
 			render.printf("tuning..");
-			spr.pushSprite(140,0);
+			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
 			last_status = status ;
 			break;
@@ -550,7 +550,7 @@ void CheckStatus (void) {
 			render.setCursor(0,0);
 			render.setFontColor(TFT_RED);
 			render.printf("stream stop");
-			spr.pushSprite(140,0);
+			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
 			last_status = status ;
 			break;
