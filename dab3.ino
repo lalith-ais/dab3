@@ -41,6 +41,7 @@ uint8_t data[256];
 char rxdata[256]; // buffer for misc strings
 uint32_t cursorX;
 uint32_t cursorY=0;
+
 int totalChannels = 0;
 int channel = 0x00;
 unsigned char status;
@@ -49,6 +50,7 @@ bool update_flag = false;
 hw_timer_t * timer = NULL;
 int  num_int = 0;
 int count = 0;
+
 
 // timer0 ISR 
 void IRAM_ATTR onTimer(){
@@ -60,6 +62,8 @@ IRAM_ATTR void checkPosition()
 {
 	encoder->tick(); // just call tick() to check the state.
 }
+
+
 
 // T4B helpers
 
@@ -166,25 +170,40 @@ void setup () {
 	Serial.print("total channels :");
 	Serial.println(totalChannels);
 
-
 	encoder = new RotaryEncoder(RE_DATA, RE_CLK, RotaryEncoder::LatchMode::TWO03);
-
 	attachInterrupt(digitalPinToInterrupt(RE_DATA), checkPosition, CHANGE);
 	attachInterrupt(digitalPinToInterrupt(RE_CLK), checkPosition, CHANGE);
+
+	// new timer API 3.0 , interrupt every second
+	timer = timerBegin(1000000);
+	timerAttachInterrupt(timer,  &onTimer );
+	timerAlarm(timer, 1000000 , true, 0);
 
 } // setup
 
 void loop() {
-
 	int newPos = encoder->getPosition();
 	if (pos != newPos) {
 		if (newPos > pos) { channel++ ; } else { channel-- ; }
 		if (channel < 0 ) { channel = 0 ;}
 		if ( channel ==  totalChannels ) { channel-- ;}
 		pos = newPos;
-		Serial.println(channel);
+		spr.createSprite(320, 20);
+		render.setDrawer(spr);
+		render.setFontSize(14);
+		render.setCursor(0, 0);
+		render.setFontColor(TFT_WHITE);
+		sprintf(&rxdata[0], "%3u / %3u", channel+1, totalChannels);
+		rxdata[10] = '\0'; 
+		render.printf(rxdata);
+		spr.pushSprite(0,170); 
+		spr.deleteSprite(); 
 	}
 
-
+	//tasker  every second
+	if ( num_int > 0){
+		num_int--;
+		count++ ;
+	}
 
 } // loop
