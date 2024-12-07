@@ -299,33 +299,51 @@ unsigned char STREAM_GetPlayStatus(void) {
 }
 
 
+void STREAM_GetProgrameText(unsigned char channel) {
+
+	const char command[7] = {0xFE, 0x01, 0x2e, 0x2e, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 50);
+	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
+	// utf8Text can be directly written to TFT
+	Serial.println(utf8Text);
+	spr.createSprite(320, 80);
+	render.setDrawer(spr);
+	render.setFontColor(TFT_GREEN); // note font colour must be set as render.setfont
+	int fontSize =18 ;
+	renderTextWithFontSize(utf8Text, fontSize);
+	spr.pushSprite(0,90);
+	spr.deleteSprite();
+
+}
 
 
+// state machine
+void CheckStatus (void) {
+	status = STREAM_GetPlayStatus();
+	switch (status) {
+		case 0x00:
+			if (status_flag & 0x02) { STREAM_GetProgrameText(channel);}
+			if (status != last_status ) {
+				STREAM_GetProgrameText(channel);
+				last_status = status ;
+			}
+			break;
+
+		case 0x01:
+
+			break;
+
+		case 0x02:
+
+			break;
+
+		case 0x03:
+
+			break;
+	}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+}
 
 
 // main
@@ -424,7 +442,8 @@ void loop() {
 	//tasker  every second
 	if ( num_int > 0){
 		num_int--;
-		count++ ;
+		//count++ ;
+		CheckStatus();
 	}
 
 } // loop
