@@ -45,7 +45,7 @@ char utf8Text[256];
 size_t length = 0;
 uint8_t data[256];
 char rxdata[256]; // buffer for misc strings
-char rssidata[16]: // for rssi ony
+char rssidata[16]; // for rssi ony
 uint32_t cursorX;
 uint32_t cursorY=0;
 
@@ -339,6 +339,7 @@ void GetRssi(void) {
 void STREAM_GetStereo (void) {
 	const char command[7] = {0xFE, 0x01, 0x16, 0x16, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 7, 100);
+  rxdata[0] = '\0';
 	switch (data[6]) {
 		case 0x00:sprintf(&rxdata[0], "STEREO");
 				  rxdata[7] = '\0';
@@ -401,6 +402,13 @@ void GPIO_SetFunction (unsigned char gpio, unsigned char function) {
 
 	const char command[10] = {0xFE, 0x08, 0x00, 0x00, 0x00, 0x03, gpio, function, 0x03, 0xFD};
 	writeReadUart(command, 10, 50);
+}
+
+void EnableSyncClock(void) {
+
+	const char command[8] = {0xFE, 0x02, 0x02, 0x02, 0x00, 0x01, 0x01, 0xFD};
+	writeReadUart(command, 8, 50);
+
 }
 
 // state machine
@@ -522,6 +530,7 @@ void setup () {
 	render.printf(rxdata);
 	spr.pushSprite(0,170); 
 	spr.deleteSprite(); 
+	EnableSyncClock();
 } // setup
 
 void loop() {
