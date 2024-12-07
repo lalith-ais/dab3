@@ -178,8 +178,11 @@ void loop() {
 
 	int newPos = encoder->getPosition();
 	if (pos != newPos) {
+		if (newPos > pos) { channel++ ; } else { channel-- ; }
+		if (channel < 0 ) { channel = 0 ;}
+		if ( channel ==  totalChannels ) { channel-- ;}
 		pos = newPos;
-		Serial.println(pos);
+		Serial.println(channel);
 	}
 
 
