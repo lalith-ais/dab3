@@ -456,6 +456,44 @@ void GetDataRate(void) {
 	spr.deleteSprite(); 
 }
 
+
+void STREAM_GetServCompType(void) {
+	int z;
+	const char command[7] = {0xFE, 0x01, 0x40, 0x40, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 50);
+	for (z=0 ; z <8 ;z++) {Serial.print(data[z],HEX);Serial.print(" ");}
+	Serial.println();
+
+	switch (data[6]) { 
+		case 0x00: sprintf(&rxdata[0], "DAB");
+				   rxdata[4] = '\0';
+
+				   break;
+		case 0x01: sprintf(&rxdata[0], "DAB+");
+				   rxdata[5] = '\0';
+
+				   break;
+		case 0x02:sprintf(&rxdata[0], "Packet Data");
+				  rxdata[12] = '\0';
+
+				  break;
+		case 0x03: sprintf(&rxdata[0], "Stream Data");
+				   rxdata[12] = '\0';
+
+				   break;		
+	}
+
+	spr.createSprite(80, 20);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_CYAN);
+	render.printf(rxdata);
+	spr.pushSprite(0,0);
+	spr.deleteSprite(); 
+
+}
+
 // state machine
 void CheckStatus (void) {
 	status = STREAM_GetPlayStatus();
@@ -467,19 +505,53 @@ void CheckStatus (void) {
 			if (status != last_status ) {
 				STREAM_GetProgrameText(channel);
 				GetDataRate();
+				STREAM_GetServCompType();
 				last_status = status ;
+				spr.createSprite(80, 20);
+				render.setDrawer(spr);
+				render.setFontSize(14);
+				render.setCursor(0,0);
+				render.setFontColor(TFT_GREEN);
+				render.printf("playing..");
+				spr.pushSprite(140,0);
+				spr.deleteSprite(); 
+
 			}
 			break;
 
 		case 0x01:
+			spr.createSprite(80, 20);
+			render.setDrawer(spr);
+			render.setFontSize(14);
+			render.setCursor(0,0);
+			render.setFontColor(TFT_YELLOW);
+			render.printf("searching..");
+			spr.pushSprite(140,0);
+			spr.deleteSprite(); 
 			last_status = status ;
 			break;
 
 		case 0x02:
+			spr.createSprite(80, 20);
+			render.setDrawer(spr);
+			render.setFontSize(14);
+			render.setCursor(0,0);
+			render.setFontColor(TFT_GREEN);
+			render.printf("tuning..");
+			spr.pushSprite(140,0);
+			spr.deleteSprite(); 
 			last_status = status ;
 			break;
 
 		case 0x03:
+			spr.createSprite(80, 20);
+			render.setDrawer(spr);
+			render.setFontSize(14);
+			render.setCursor(0,0);
+			render.setFontColor(TFT_RED);
+			render.printf("stream stop");
+			spr.pushSprite(140,0);
+			spr.deleteSprite(); 
 			last_status = status ;
 			break;
 	}
