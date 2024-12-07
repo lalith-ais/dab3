@@ -364,6 +364,7 @@ void loop() {
 		if (channel < 0 ) { channel = 0 ;}
 		if ( channel ==  totalChannels ) { channel-- ;}
 		pos = newPos;
+		STREAM_GetProgrameName(channel);
 		spr.createSprite(320, 20);
 		render.setDrawer(spr);
 		render.setFontSize(14);
