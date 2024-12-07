@@ -339,7 +339,7 @@ void GetRssi(void) {
 void STREAM_GetStereo (void) {
 	const char command[7] = {0xFE, 0x01, 0x16, 0x16, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 7, 100);
-  rxdata[0] = '\0';
+	rxdata[0] = '\0';
 	switch (data[6]) {
 		case 0x00:sprintf(&rxdata[0], "STEREO");
 				  rxdata[7] = '\0';
@@ -411,6 +411,33 @@ void EnableSyncClock(void) {
 
 }
 
+void GetClock(void) {
+
+	int z;
+	const char command[7] = {0xFE, 0x02, 0x01, 0x01, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 50);
+	//for (z=0 ; z < length ;z++) {Serial.print(data[z],HEX);Serial.print(" ");}
+	// convert this to a meaningful string. response 7 bytes of data
+	// data[6]  seconds 00..59
+	// data[7]  minute 00..59
+	// data[8]  hour 00..23
+	// data[9]  day 1..31
+	// data[10]  week 0:saturday .. 6:friday
+	// data[11]  month 1..12 
+	// data[12] year 00:2000 , 01:2001 ...	
+
+	sprintf(&rxdata[0], "%02u:%02u ",data[8], data[7]);
+	rxdata[6] = '\0';
+	spr.createSprite(60, 30);
+	render.setDrawer(spr);
+	render.setFontSize(22);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_WHITE);
+	render.printf(rxdata);
+	spr.pushSprite(260,0);
+	spr.deleteSprite(); 
+}
+
 // state machine
 void CheckStatus (void) {
 	status = STREAM_GetPlayStatus();
@@ -418,6 +445,7 @@ void CheckStatus (void) {
 		case 0x00:
 			if (status_flag & 0x02) { STREAM_GetProgrameText(channel);}
 			if (status_flag & 0x08) { STREAM_GetStereo();}
+			if (status_flag & 0x80) ( GetClock());
 			if (status != last_status ) {
 				STREAM_GetProgrameText(channel);
 				last_status = status ;
