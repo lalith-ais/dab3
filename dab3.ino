@@ -45,6 +45,7 @@ char utf8Text[256];
 size_t length = 0;
 uint8_t data[256];
 char rxdata[256]; // buffer for misc strings
+char rssidata[16]: // for rssi ony
 uint32_t cursorX;
 uint32_t cursorY=0;
 
@@ -303,6 +304,7 @@ unsigned char STREAM_GetPlayStatus(void) {
 void STREAM_GetProgrameText(unsigned char channel) {
 
 	const char command[7] = {0xFE, 0x01, 0x2e, 0x2e, 0x00, 0x00, 0xFD};
+
 	writeReadUart(command, 7, 50);
 	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
 	// utf8Text can be directly written to TFT
@@ -321,17 +323,50 @@ void STREAM_GetProgrameText(unsigned char channel) {
 void GetRssi(void) {
 	const char command[7] = {0xFE, 0x01, 0x17, 0x17, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 7, 100);
-	sprintf(&rxdata[0], "%02u dBm", data[6]);
-	rxdata[7] = '\0';
-	spr.createSprite(320, 20);
+	sprintf(&rssidata[0], "%02u dBm", data[6]);
+	rssidata[7] = '\0';
+	spr.createSprite(50, 20);
 	render.setDrawer(spr);
 	render.setFontSize(14);
 	render.setCursor(0,0);
 	render.setFontColor(TFT_ORANGE);
-	render.printf(rxdata);
+	render.printf(rssidata);
 	spr.pushSprite(70,170); 
 	spr.deleteSprite(); 
 
+}
+
+void STREAM_GetStereo (void) {
+	const char command[7] = {0xFE, 0x01, 0x16, 0x16, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 100);
+	switch (data[6]) {
+		case 0x00:sprintf(&rxdata[0], "STEREO");
+				  rxdata[7] = '\0';
+				  break;
+
+		case 0x01: sprintf(&rxdata[0], "Joint STEREO");
+				   rxdata[13] = '\0';
+
+				   break;
+
+		case 0x02: sprintf(&rxdata[0], "Dual STEREO");
+				   rxdata[14] = '\0';
+
+				   break;
+
+		case 0x03: sprintf(&rxdata[0], "MONO");
+				   rxdata[5] = '\0';
+
+				   break;	
+	}
+	spr.createSprite(80, 20);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_BROWN);
+	render.printf(rxdata);
+	spr.pushSprite(130,170); 
+	spr.deleteSprite(); 
 }
 
 
@@ -374,6 +409,7 @@ void CheckStatus (void) {
 	switch (status) {
 		case 0x00:
 			if (status_flag & 0x02) { STREAM_GetProgrameText(channel);}
+			if (status_flag & 0x08) { STREAM_GetStereo();}
 			if (status != last_status ) {
 				STREAM_GetProgrameText(channel);
 				last_status = status ;
