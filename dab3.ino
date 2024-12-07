@@ -104,6 +104,12 @@ void SYSTEM_GetAllVersion(void) {
 	rxdata[index - 1] = '\0'; // rxdata can now be printed
 }
 
+int STREAM_GetTotalProgram (void) {
+	const char command[] =  {0xFE, 0x01, 0x13, 0x13, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 7, 100);
+	return data[9]; // max 200 channels, hence one byte is ok
+}
+
 // main
 
 void setup () {
@@ -155,6 +161,10 @@ void setup () {
 	render.printf(rxdata);
 	spr.pushSprite(0,170);
 	spr.deleteSprite();
+
+	totalChannels = STREAM_GetTotalProgram();
+	Serial.print("total channels :");
+	Serial.println(totalChannels);
 
 
 	encoder = new RotaryEncoder(RE_DATA, RE_CLK, RotaryEncoder::LatchMode::TWO03);
