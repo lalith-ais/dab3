@@ -309,7 +309,6 @@ void STREAM_GetProgrameText(unsigned char channel) {
 	Serial.println(utf8Text);
 	spr.createSprite(320, 70);
 	render.setDrawer(spr);
-
 	render.setFontColor(TFT_GREEN); // note font colour must be set as render.setfont
 	int fontSize =18 ;
 	cursorY=0;
@@ -470,6 +469,9 @@ void loop() {
 		STREAM_GetProgrameName(channel);
 		STREAM_GetEnsembleName(channel);
 		STREAM_PlayDAB(channel);
+		spr.createSprite(320, 70);
+		spr.pushSprite(0,100);
+		spr.deleteSprite();
 		spr.createSprite(320, 20);
 		render.setDrawer(spr);
 		render.setFontSize(14);
