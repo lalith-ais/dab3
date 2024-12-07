@@ -6,6 +6,12 @@
 
 #define SCREEN_WIDTH 320
 
+// Node to store each line in a linked list
+typedef struct LineNode {
+	char* line;
+	struct LineNode* next;
+} LineNode;
+
 // rotary encoder ports
 #define RE_CLK 36 // CLK 
 #define RE_SW  35 // PUSH SWITCH (GPIO22 is pulled up + green LED)
@@ -67,6 +73,145 @@ IRAM_ATTR void checkPosition()
 
 // T4B helpers
 
+// Function to split text by width with font size set once
+LineNode* splitByWidth(const char* input, int fontSize) {
+	render.setFontSize(fontSize); // Set the font size once
+
+	LineNode* head = NULL; // Start of the linked list
+	LineNode* tail = NULL; // End of the linked list
+
+	// Make a copy of the input to avoid modifying the original string
+	size_t length = strlen(input);
+	char* buffer = (char*)malloc(length + 1);
+	if (!buffer) return NULL; // Memory allocation check
+	strcpy(buffer, input);
+
+	char* token = strtok(buffer, " "); // Tokenize the input by spaces
+	char* currentLine = (char*)malloc(length + 1); // Temporary buffer for the current line
+	if (!currentLine) {
+		free(buffer);
+		return NULL;
+	}
+	currentLine[0] = '\0'; // Start with an empty string
+
+	while (token != NULL) {
+		// Test if adding the current token fits within SCREEN_WIDTH
+		size_t newLineLength = strlen(currentLine) + strlen(token) + 1; // +1 for space
+		char* newLine = (char*)malloc(newLineLength + 1); // Temporary line with token
+		if (!newLine) break;
+		strcpy(newLine, currentLine);
+		if (strlen(currentLine) > 0) strcat(newLine, " ");
+		strcat(newLine, token);
+
+		if (render.getTextWidth(newLine) <= SCREEN_WIDTH) {
+			// If it fits, update the current line
+			strcpy(currentLine, newLine);
+		} else {
+			// If it doesn't fit, add the current line to the list
+			LineNode* newNode = (LineNode*)malloc(sizeof(LineNode));
+			if (!newNode) break;
+			newNode->line = strdup(currentLine);
+			newNode->next = NULL;
+
+			if (!head) head = tail = newNode; // First node
+			else {
+				tail->next = newNode;
+				tail = newNode;
+			}
+
+			// Start a new line with the current token
+			strcpy(currentLine, token);
+		}
+		free(newLine); // Clean up temporary line
+		token = strtok(NULL, " ");
+	}
+
+	// Add the last line if there's any
+	if (strlen(currentLine) > 0) {
+		LineNode* newNode = (LineNode*)malloc(sizeof(LineNode));
+		if (newNode) {
+			newNode->line = strdup(currentLine);
+			newNode->next = NULL;
+
+			if (!head) head = newNode;
+			else tail->next = newNode;
+		}
+	}
+
+	// Cleanup
+	free(currentLine);
+	free(buffer);
+	return head;
+}
+
+// Helper function to print the linked list
+void printLines(LineNode* head) {
+	while (head) {
+		int textWidth = render.getTextWidth(head->line);
+		int textHeight = render.getTextHeight(head->line);
+		int cursorX = (SCREEN_WIDTH - textWidth) / 2;
+		render.setCursor(cursorX, cursorY);
+		render.printf(head->line);
+		cursorY += (textHeight + 5);
+		head = head->next;
+	}
+}
+
+// Function to render text with variable font size
+void renderTextWithFontSize(const char* text, int fontSize) {
+	LineNode* lines = splitByWidth(text, fontSize);
+	if (lines) {
+		printLines(lines);
+		freeLines(lines);
+	}
+}
+
+// Helper function to free the linked list
+void freeLines(LineNode* head) {
+	while (head) {
+		LineNode* temp = head;
+		head = head->next;
+		free(temp->line);
+		free(temp);
+	}
+}
+
+
+
+
+void convertUCS2toUTF8(uint8_t* ucs2Data, int length, char* utf8Buffer, int utf8BufferSize) {
+	int utf8Index = 0;
+	// actaul data starts from 6  and ends at length-1
+	for (int i = 6; i < length -1; i += 2) {
+		// Combine two bytes to form a UCS-2 character
+		uint16_t ucs2Char = (ucs2Data[i] << 8) | ucs2Data[i + 1];
+
+		// Convert UCS-2 character to UTF-8 encoding
+		if (ucs2Char < 0x80) {
+			// 1-byte UTF-8 (ASCII-compatible)
+			if (utf8Index < utf8BufferSize - 1) {
+				utf8Buffer[utf8Index++] = ucs2Char;
+			}
+		} else if (ucs2Char < 0x800) {
+			// 2-byte UTF-8
+			if (utf8Index < utf8BufferSize - 2) {
+				utf8Buffer[utf8Index++] = 0xC0 | (ucs2Char >> 6);           // First byte
+				utf8Buffer[utf8Index++] = 0x80 | (ucs2Char & 0x3F);         // Second byte
+			}
+		} else {
+			// 3-byte UTF-8
+			if (utf8Index < utf8BufferSize - 3) {
+				utf8Buffer[utf8Index++] = 0xE0 | (ucs2Char >> 12);          // First byte
+				utf8Buffer[utf8Index++] = 0x80 | ((ucs2Char >> 6) & 0x3F);  // Second byte
+				utf8Buffer[utf8Index++] = 0x80 | (ucs2Char & 0x3F);         // Third byte
+			}
+		}
+	}
+
+	// Null-terminate the UTF-8 string
+	utf8Buffer[utf8Index] = '\0';
+}
+
 void writeReadUart(const char* _cmd, const size_t& _size, uint8_t _timeout)
 {
 	uart_flush(UART_NUM_2);
@@ -113,6 +258,32 @@ int STREAM_GetTotalProgram (void) {
 	writeReadUart(command, 7, 100);
 	return data[9]; // max 200 channels, hence one byte is ok
 }
+
+
+
+void STREAM_GetProgrameName (int ch) {
+	const char command[12] = {0xFE, 0x01, 0x2d, 0x2d, 0x00, 0x05, 0x00, 0x00, 0x00, ch, 0x01, 0xFD};
+	writeReadUart(command, 12, 50);
+	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
+	// utf8Text can be directly written to TFT
+	Serial.println(utf8Text);
+	spr.createSprite(320, 40);
+	render.setDrawer(spr);
+	render.setFontColor(TFT_BLUE); // note font colour must be set as render.setfont
+	cursorY=0; // this is required to start writing from top of sprite
+	int fontSize =32 ;
+	renderTextWithFontSize(utf8Text, fontSize);
+	spr.pushSprite(0,35);
+	spr.deleteSprite();
+
+
+
+
+
+}
+
+
+
 
 // main
 
@@ -169,6 +340,11 @@ void setup () {
 	totalChannels = STREAM_GetTotalProgram();
 	Serial.print("total channels :");
 	Serial.println(totalChannels);
+
+	Serial.print("playing channel :");
+	STREAM_GetProgrameName(channel);
+
+
 
 	encoder = new RotaryEncoder(RE_DATA, RE_CLK, RotaryEncoder::LatchMode::TWO03);
 	attachInterrupt(digitalPinToInterrupt(RE_DATA), checkPosition, CHANGE);
