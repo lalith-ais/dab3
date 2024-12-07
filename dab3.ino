@@ -321,8 +321,6 @@ void STREAM_GetProgrameText(unsigned char channel) {
 void GetRssi(void) {
 	const char command[7] = {0xFE, 0x01, 0x17, 0x17, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 7, 100);
-	Serial.print("  -"); Serial.print(data[6], DEC); Serial.print("dBm ");
-
 	sprintf(&rxdata[0], "%02u dBm", data[6]);
 	rxdata[7] = '\0';
 	spr.createSprite(320, 20);
@@ -475,6 +473,19 @@ void setup () {
 	timerAttachInterrupt(timer,  &onTimer );
 	timerAlarm(timer, 1000000 , true, 0);
 
+	spr.createSprite(320, 70);
+	spr.pushSprite(0,100);
+	spr.deleteSprite();
+	spr.createSprite(320, 20);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_WHITE);
+	sprintf(&rxdata[0], "%3u / %3u", channel+1, totalChannels);
+	rxdata[10] = '\0'; 
+	render.printf(rxdata);
+	spr.pushSprite(0,170); 
+	spr.deleteSprite(); 
 } // setup
 
 void loop() {
