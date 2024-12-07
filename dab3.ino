@@ -269,6 +269,7 @@ void STREAM_GetProgrameName (unsigned char channel) {
 	render.setFontColor(TFT_BLUE); // note font colour must be set as render.setfont
 	cursorY=0; // this is required to start writing from top of sprite
 	int fontSize =32 ;
+	cursorY=0;
 	renderTextWithFontSize(utf8Text, fontSize);
 	spr.pushSprite(0,35);
 	spr.deleteSprite();
@@ -280,11 +281,11 @@ void STREAM_GetEnsembleName (unsigned char channel) {
 	writeReadUart(command, 12, 50);
 	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
 	//Serial.println(utf8Text);
-	spr.createSprite(320, 40);
+	spr.createSprite(320, 20);
 	render.setDrawer(spr);
 	render.setFontColor(TFT_CYAN); // note font colour must be set as render.se
 	cursorY=0; // this is required to start writing from top of sprite
-	int fontSize =18 ;
+	int fontSize =16 ;
 	renderTextWithFontSize(utf8Text, fontSize);
 	spr.pushSprite(0,75);
 	spr.deleteSprite();
@@ -306,16 +307,51 @@ void STREAM_GetProgrameText(unsigned char channel) {
 	convertUCS2toUTF8(data, length, utf8Text, sizeof(utf8Text));
 	// utf8Text can be directly written to TFT
 	Serial.println(utf8Text);
-	spr.createSprite(320, 80);
+	spr.createSprite(320, 70);
 	render.setDrawer(spr);
+
 	render.setFontColor(TFT_GREEN); // note font colour must be set as render.setfont
 	int fontSize =18 ;
+	cursorY=0;
 	renderTextWithFontSize(utf8Text, fontSize);
-	spr.pushSprite(0,90);
+	spr.pushSprite(0,100);
 	spr.deleteSprite();
 
 }
 
+
+void STREAM_PlayDAB(unsigned char index ) {
+
+	const char command[12] = {0xFE, 0x01, 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00, index, 0xFD};
+	writeReadUart(command, 12, 200);
+}
+
+void SetLRmode(unsigned char mode) {
+	// mode 0=L/R  1=L 2=R
+	const char command[8] = {0xFE, 0x01, 0x06, 0x06, 0x00, 0x01, mode, 0xFD};
+	writeReadUart(command, 8, 50);
+}
+
+
+void SetStereomode(unsigned char mode) {
+
+	const char command[8] = {0xFE, 0x01, 0x20, 0x20, 0x00, 0x01, mode, 0xFD};
+	writeReadUart(command, 8, 50);
+
+}
+
+void SetVolume(unsigned char volume) {
+
+	const char command[8] = {0xFE, 0x01, 0x22, 0x22, 0x00, 0x01, volume, 0xFD};
+	writeReadUart(command, 8, 50);
+}
+
+
+void GPIO_SetFunction (unsigned char gpio, unsigned char function) {
+
+	const char command[10] = {0xFE, 0x08, 0x00, 0x00, 0x00, 0x03, gpio, function, 0x03, 0xFD};
+	writeReadUart(command, 10, 50);
+}
 
 // state machine
 void CheckStatus (void) {
@@ -330,15 +366,15 @@ void CheckStatus (void) {
 			break;
 
 		case 0x01:
-
+			last_status = status ;
 			break;
 
 		case 0x02:
-
+			last_status = status ;
 			break;
 
 		case 0x03:
-
+			last_status = status ;
 			break;
 	}
 
@@ -404,8 +440,14 @@ void setup () {
 	Serial.print("playing channel :");
 	STREAM_GetProgrameName(channel);
 	STREAM_GetEnsembleName(channel);
-
-
+	STREAM_PlayDAB(channel);
+	SetLRmode(0x00); //
+	SetStereomode(0x01); // auto detect stereo
+	SetVolume(16); // set to 16 , no distortion in DAC
+	GPIO_SetFunction(GPIO_43, i2s_DATA);
+	GPIO_SetFunction(GPIO_55, i2s_LRCLK);
+	GPIO_SetFunction(GPIO_54, i2s_MCLK);
+	GPIO_SetFunction(GPIO_53, i2s_BCLK);
 
 	encoder = new RotaryEncoder(RE_DATA, RE_CLK, RotaryEncoder::LatchMode::TWO03);
 	attachInterrupt(digitalPinToInterrupt(RE_DATA), checkPosition, CHANGE);
@@ -427,10 +469,11 @@ void loop() {
 		pos = newPos;
 		STREAM_GetProgrameName(channel);
 		STREAM_GetEnsembleName(channel);
+		STREAM_PlayDAB(channel);
 		spr.createSprite(320, 20);
 		render.setDrawer(spr);
 		render.setFontSize(14);
-		render.setCursor(0, 0);
+		render.setCursor(0,0);
 		render.setFontColor(TFT_WHITE);
 		sprintf(&rxdata[0], "%3u / %3u", channel+1, totalChannels);
 		rxdata[10] = '\0'; 
