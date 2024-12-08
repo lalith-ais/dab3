@@ -434,15 +434,15 @@ void GetClock(void) {
 	// data[11]  month 1..12 
 	// data[12] year 00:2000 , 01:2001 ...	
 
-	sprintf(&rxdata[0], "%2u : %02u",data[8], data[7]);
-	rxdata[7] = '\0';
-	spr.createSprite(60, 30);
+	sprintf(&rxdata[0], "%2u:%02u",data[8], data[7]);
+	rxdata[6] = '\0';
+	spr.createSprite(50, 30);
 	render.setDrawer(spr);
 	render.setFontSize(22);
 	render.setCursor(0,0);
 	render.setFontColor(TFT_WHITE);
 	render.printf(rxdata);
-	spr.pushSprite(260,0);
+	spr.pushSprite(270,0);
 	spr.deleteSprite(); 
 }
 
