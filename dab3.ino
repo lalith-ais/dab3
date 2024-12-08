@@ -16,6 +16,8 @@ typedef struct LineNode {
 #define RE_CLK 36 // CLK 
 #define RE_SW  35 // PUSH SWITCH (GPIO22 is pulled up + green LED)
 #define RE_DATA 39 // DATA OUT
+#define BACKLIGHT 3
+
 
 //T4B register definitions
 #define GPIO_43	0x2B
@@ -67,7 +69,8 @@ uint16_t a;
 uint16_t bar_colour;
 uint16_t l_peak, r_peak, l_last, r_last, last_data_update ;
 
-
+const int pwm_freq = 5000 ;
+const int resolution = 8;
 // timer0 ISR 
 void IRAM_ATTR onTimer(){
 	num_int++ ;
@@ -674,6 +677,9 @@ void setup () {
 	Serial.begin(115200);
 	Serial.println("starting up..");
 
+	ledcAttach(BACKLIGHT, pwm_freq,  resolution);
+	ledcWrite(BACKLIGHT, 64);
+
 	uart_config_t uart_config = {
 		.baud_rate = 115200,
 		.data_bits = UART_DATA_8_BITS,
@@ -770,6 +776,7 @@ void setup () {
 	vuspr.print("R");
 	vudata = 0x0A0A; // dummy data 
 	pinMode(RE_SW, INPUT);
+
 
 } // setup
 
