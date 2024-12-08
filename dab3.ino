@@ -502,6 +502,14 @@ void STREAM_GetServCompType(void) {
 
 }
 
+void STREAM_SetEQ(void) {
+
+	const char command[9] = {0xFE, 0x01, 0x26, 0x26, 0x00, 0x02, 0x01,0x00, 0xFD};
+	writeReadUart(command, 9, 50);
+}
+
+
+
 // state machine
 void CheckStatus (void) {
 	status = STREAM_GetPlayStatus();
@@ -686,6 +694,7 @@ void setup () {
 	GPIO_SetFunction(GPIO_55, i2s_LRCLK);
 	GPIO_SetFunction(GPIO_54, i2s_MCLK);
 	GPIO_SetFunction(GPIO_53, i2s_BCLK);
+	//STREAM_SetEQ(); Bass Boost
 
 	encoder = new RotaryEncoder(RE_DATA, RE_CLK, RotaryEncoder::LatchMode::TWO03);
 	attachInterrupt(digitalPinToInterrupt(RE_DATA), checkPosition, CHANGE);
