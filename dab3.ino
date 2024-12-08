@@ -508,7 +508,10 @@ void STREAM_SetEQ(void) {
 	writeReadUart(command, 9, 50);
 }
 
-
+void STREAM_AutoSearch(unsigned char startCh, unsigned char endCh) {
+	const char command[9] = {0xFE, 0x01, 0x04, 0x04, 0x00, 0x02, startCh, endCh, 0xFD};
+	writeReadUart(command, 9, 200);
+}
 
 // state machine
 void CheckStatus (void) {
@@ -544,6 +547,22 @@ void CheckStatus (void) {
 			render.printf("searching..");
 			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
+			totalChannels = STREAM_GetTotalProgram();
+
+			spr.createSprite(320, 20);
+			render.setDrawer(spr);
+			render.setFontSize(14);
+			render.setCursor(0,0);
+			render.setFontColor(TFT_WHITE);
+			sprintf(&rxdata[0], "%3u",totalChannels);
+			rxdata[5] = '\0'; 
+			render.printf(rxdata);
+			spr.pushSprite(0,170); 
+			spr.deleteSprite(); 
+
+
+
+
 			last_status = status ;
 			break;
 
@@ -729,6 +748,8 @@ void setup () {
 	vuspr.setCursor(3, 20, 2);
 	vuspr.print("R");
 	vudata = 0x0A0A; // dummy data 
+	pinMode(RE_SW, INPUT);
+
 } // setup
 
 void loop() {
@@ -762,6 +783,19 @@ void loop() {
 		//count++ ;
 		CheckStatus();
 		GetRssi();
+		if (digitalRead(RE_SW) == 0) {
+			SYSTEM_Reset(0x02); // clear database
+			delay(3000);
+			while (! SYSTEM_GetSysRdy()) {
+				delay(500);
+				Serial.print(".");
+			}
+			spr.createSprite(320, 70);
+			spr.pushSprite(0,100);
+			spr.deleteSprite();
+			STREAM_AutoSearch(0x00, 0x28);
+
+		}
 	}
 
 	time_now = millis();
