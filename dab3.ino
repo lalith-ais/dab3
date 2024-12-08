@@ -39,6 +39,7 @@ static int pos = 0;
 char  buf[15];
 TFT_eSPI tft = TFT_eSPI();
 TFT_eSprite spr = TFT_eSprite(&tft);
+TFT_eSprite vuspr = TFT_eSprite(&tft);
 
 OpenFontRender render;
 char utf8Text[256]; 
@@ -58,6 +59,13 @@ hw_timer_t * timer = NULL;
 int  num_int = 0;
 int count = 0;
 uint8_t status_flag = 0;
+
+unsigned long last_update, time_now = 0 ;
+uint16_t vudata =0;
+uint8_t vuRight, vuLeft =0;
+uint16_t a;
+uint16_t bar_colour;
+uint16_t l_peak, r_peak, l_last, r_last, last_data_update ;
 
 
 // timer0 ISR 
@@ -323,7 +331,7 @@ void STREAM_GetProgrameText(unsigned char channel) {
 void GetRssi(void) {
 	const char command[7] = {0xFE, 0x01, 0x17, 0x17, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 7, 100);
-	sprintf(&rssidata[0], "%02u dBm", data[6]);
+	sprintf(&rssidata[0], "%02u dB", data[6]);
 	rssidata[7] = '\0';
 	spr.createSprite(50, 20);
 	render.setDrawer(spr);
@@ -426,8 +434,8 @@ void GetClock(void) {
 	// data[11]  month 1..12 
 	// data[12] year 00:2000 , 01:2001 ...	
 
-	sprintf(&rxdata[0], "%02u:%02u ",data[8], data[7]);
-	rxdata[6] = '\0';
+	sprintf(&rxdata[0], "%2u : %02u",data[8], data[7]);
+	rxdata[7] = '\0';
 	spr.createSprite(60, 30);
 	render.setDrawer(spr);
 	render.setFontSize(22);
@@ -560,6 +568,58 @@ void CheckStatus (void) {
 }
 
 
+// VU meter
+
+void decay_bar (void){
+
+	//vudata = audio.getVUlevel();
+
+	vuLeft = (((vudata >> 8) & 0xFF) *5) >>3; 
+	vuRight = ((vudata& 0xFF)*5) >>3;
+
+	if (vuLeft > l_peak ){ l_peak = vuLeft; }
+	if (vuRight >r_peak ){r_peak = vuRight ;}
+
+
+
+	for (a=vuLeft; a<80; a++){
+		vuspr.drawFastVLine(4*a, 0 , 15, TFT_BLACK);
+	}
+
+	for (a=vuRight; a<80; a++){
+		vuspr.drawFastVLine(4*a, 20 , 15, TFT_BLACK);
+	}
+
+	for (a=5; a<vuLeft; a++){
+		a < 70 ? bar_colour=TFT_ORANGE: bar_colour=TFT_WHITE ;
+		vuspr.drawFastVLine(4*a, 0 , 15, bar_colour);
+	}
+
+	for (a=5; a<vuRight; a++){
+		a < 70 ? bar_colour=TFT_ORANGE: bar_colour=TFT_WHITE ;
+		vuspr.drawFastVLine(4*a, 20 , 15, bar_colour);
+	}
+
+	if (l_peak > vuLeft){   
+		for (a=l_peak; a<80; a++){
+			vuspr.drawFastVLine(4*a, 0 , 15, TFT_BLACK);
+		} 
+		if (l_peak > 5) { l_peak--; }
+		vuspr.drawFastVLine(4*l_peak, 0 , 15, TFT_WHITE);
+	}
+	if (r_peak > vuRight){  
+		for (a=r_peak; a<80; a++){
+			vuspr.drawFastVLine(4*a, 20 , 15, TFT_BLACK);
+		} 
+		if (r_peak > 5) { r_peak--; }
+		vuspr.drawFastVLine(4*r_peak, 20 , 15, TFT_WHITE);
+
+	}
+
+	vuspr.pushSprite(0,200);
+}
+
+
 // main
 
 void setup () {
@@ -650,6 +710,16 @@ void setup () {
 	spr.pushSprite(0,170); 
 	spr.deleteSprite(); 
 	EnableSyncClock();
+
+	vuspr.createSprite(320, 40);
+	vuspr.setTextColor(TFT_BLUE, TFT_BLACK);
+	render.setDrawer(vuspr);
+	render.setFontSize(14);
+	vuspr.setCursor(3, 0, 2);
+	vuspr.print("L");
+	vuspr.setCursor(3, 20, 2);
+	vuspr.print("R");
+	vudata = 0x0A0A; // dummy data 
 } // setup
 
 void loop() {
@@ -675,7 +745,7 @@ void loop() {
 		render.printf(rxdata);
 		spr.pushSprite(0,170); 
 		spr.deleteSprite(); 
-	}
+	} //rotary encoder
 
 	//tasker  every second
 	if ( num_int > 0){
@@ -685,4 +755,10 @@ void loop() {
 		GetRssi();
 	}
 
+	time_now = millis();
+	if ( time_now > (last_update + 30)) {
+
+		decay_bar();
+		last_update = millis();
+	}
 } // loop
