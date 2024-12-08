@@ -69,8 +69,10 @@ uint16_t a;
 uint16_t bar_colour;
 uint16_t l_peak, r_peak, l_last, r_last, last_data_update ;
 
-const int pwm_freq = 5000 ;
+const int pwm_freq = 100 ;
 const int resolution = 8;
+
+
 // timer0 ISR 
 void IRAM_ATTR onTimer(){
 	num_int++ ;
