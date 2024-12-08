@@ -513,6 +513,27 @@ void STREAM_AutoSearch(unsigned char startCh, unsigned char endCh) {
 	writeReadUart(command, 9, 200);
 }
 
+
+// STREAM_GetFrequency 0x46
+
+void STREAM_GetFrequency(void) {
+	const char command[11] = {0xFE, 0x01, 0x46, 0x46, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0xFD};
+	writeReadUart(command, 11, 200);
+	sprintf(&rxdata[0], "ch : %02u", data[6]); 
+	rxdata[10] = '\0';
+	spr.createSprite(80, 20);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_BROWN);
+	render.printf(rxdata);
+	spr.pushSprite(130,170); 
+	spr.deleteSprite(); 
+}
+// STREAM_GetSearchProgram 0x14
+
+
+
 // state machine
 void CheckStatus (void) {
 	status = STREAM_GetPlayStatus();
@@ -549,7 +570,7 @@ void CheckStatus (void) {
 			spr.deleteSprite(); 
 			totalChannels = STREAM_GetTotalProgram();
 
-			spr.createSprite(320, 20);
+			spr.createSprite(60, 20);
 			render.setDrawer(spr);
 			render.setFontSize(14);
 			render.setCursor(0,0);
@@ -559,7 +580,7 @@ void CheckStatus (void) {
 			render.printf(rxdata);
 			spr.pushSprite(0,170); 
 			spr.deleteSprite(); 
-
+			STREAM_GetFrequency();
 
 
 
@@ -790,8 +811,8 @@ void loop() {
 				delay(500);
 				Serial.print(".");
 			}
-			spr.createSprite(320, 70);
-			spr.pushSprite(0,100);
+			spr.createSprite(320, 155);
+			spr.pushSprite(0,35);
 			spr.deleteSprite();
 			STREAM_AutoSearch(0x00, 0x28);
 
