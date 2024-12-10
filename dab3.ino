@@ -737,7 +737,7 @@ void setup () {
 	STREAM_PlayDAB(channel);
 	SetLRmode(0x00); //
 	SetStereomode(0x01); // auto detect stereo
-	SetVolume(16); // set to 16 , no distortion in DAC
+	SetVolume(7); // this level is for headphone out, not I2S
 	GPIO_SetFunction(GPIO_43, i2s_DATA);
 	GPIO_SetFunction(GPIO_55, i2s_LRCLK);
 	GPIO_SetFunction(GPIO_54, i2s_MCLK);
