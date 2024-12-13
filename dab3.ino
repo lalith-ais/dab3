@@ -519,7 +519,7 @@ void STREAM_AutoSearch(unsigned char startCh, unsigned char endCh) {
 }
 
 
-// STREAM_GetFrequency 0x46
+// STREAM_GetFrequency 0x46 used while scanning
 
 void STREAM_GetFrequency(void) {
 	const char command[11] = {0xFE, 0x01, 0x46, 0x46, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0xFD};
@@ -536,6 +536,21 @@ void STREAM_GetFrequency(void) {
 	spr.deleteSprite(); 
 }
 
+
+void STREAM_GetFrequencyTuned(unsigned char channel) {
+	const char command[11] = {0xFE, 0x01, 0x46, 0x46, 0x00, 0x04, 0x00, 0x00, 0x00, channel, 0xFD};
+	writeReadUart(command, 11, 200);
+	sprintf(&rxdata[0], "channel : %02u", data[6]); 
+	rxdata[13] = '\0';
+	spr.createSprite(80, 40);
+	render.setDrawer(spr);
+	render.setFontSize(14);
+	render.setCursor(0,0);
+	render.setFontColor(TFT_BROWN);
+	render.printf(rxdata);
+	spr.pushSprite(80,0); 
+	spr.deleteSprite(); 
+}
 
 
 // state machine
@@ -587,9 +602,6 @@ void CheckStatus (void) {
 			spr.pushSprite(0,170); 
 			spr.deleteSprite(); 
 			STREAM_GetFrequency();
-
-
-
 			last_status = status ;
 			break;
 
@@ -602,6 +614,7 @@ void CheckStatus (void) {
 			render.printf("tuning..");
 			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
+			STREAM_GetFrequencyTuned(channel);
 			last_status = status ;
 			break;
 
@@ -680,8 +693,8 @@ void setup () {
 	Serial.begin(115200);
 	Serial.println("starting up..");
 
-	ledcAttach(BACKLIGHT, pwm_freq,  resolution);
-	ledcWrite(BACKLIGHT, 64);
+	//ledcAttach(BACKLIGHT, pwm_freq,  resolution);
+	//ledcWrite(BACKLIGHT,128);
 
 	uart_config_t uart_config = {
 		.baud_rate = 115200,
