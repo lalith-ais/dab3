@@ -535,7 +535,6 @@ void STREAM_GetFrequency(void) {
 	spr.pushSprite(80,0); 
 	spr.deleteSprite(); 
 }
-// STREAM_GetSearchProgram 0x14
 
 
 
@@ -603,7 +602,6 @@ void CheckStatus (void) {
 			render.printf("tuning..");
 			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
-			//STREAM_GetFrequency();  doesnt work
 			last_status = status ;
 			break;
 
