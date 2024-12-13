@@ -513,9 +513,16 @@ void STREAM_SetEQ(void) {
 	writeReadUart(command, 9, 50);
 }
 
+// DAB search process
 void STREAM_AutoSearch(unsigned char startCh, unsigned char endCh) {
 	const char command[9] = {0xFE, 0x01, 0x04, 0x04, 0x00, 0x02, startCh, endCh, 0xFD};
 	writeReadUart(command, 9, 200);
+}
+
+// FM search process
+void STREAM_Search(void) {
+	const char command[8] = {0xFE, 0x01, 0x03, 0x03, 0x00, 0x01, 0x00, 0xFD};
+	writeReadUart(command, 8, 200);
 }
 
 
@@ -838,6 +845,7 @@ void loop() {
 			spr.pushSprite(0,35);
 			spr.deleteSprite();
 			STREAM_AutoSearch(0x00, 0x28);
+			//STREAM_Search(); FM mode
 
 		}
 	}
