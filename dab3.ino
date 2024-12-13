@@ -844,7 +844,7 @@ void loop() {
 			spr.createSprite(320, 155);
 			spr.pushSprite(0,35);
 			spr.deleteSprite();
-			STREAM_AutoSearch(0x00, 0x28);
+			STREAM_AutoSearch(0x17, 0x28); // leave out low power stations
 			//STREAM_Search(); FM mode
 
 		}
