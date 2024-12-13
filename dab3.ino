@@ -524,15 +524,15 @@ void STREAM_AutoSearch(unsigned char startCh, unsigned char endCh) {
 void STREAM_GetFrequency(void) {
 	const char command[11] = {0xFE, 0x01, 0x46, 0x46, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 11, 200);
-	sprintf(&rxdata[0], "ch : %02u", data[6]); 
-	rxdata[10] = '\0';
-	spr.createSprite(80, 20);
+	sprintf(&rxdata[0], "channel : %02u", data[6]); 
+	rxdata[13] = '\0';
+	spr.createSprite(80, 40);
 	render.setDrawer(spr);
 	render.setFontSize(14);
 	render.setCursor(0,0);
 	render.setFontColor(TFT_BROWN);
 	render.printf(rxdata);
-	spr.pushSprite(130,170); 
+	spr.pushSprite(80,0); 
 	spr.deleteSprite(); 
 }
 // STREAM_GetSearchProgram 0x14
@@ -544,6 +544,7 @@ void CheckStatus (void) {
 	status = STREAM_GetPlayStatus();
 	switch (status) {
 		case 0x00:
+
 			if (status_flag & 0x02) { STREAM_GetProgrameText(channel);}
 			if (status_flag & 0x08) { STREAM_GetStereo();}
 			if (status_flag & 0x80) ( GetClock());
@@ -560,6 +561,7 @@ void CheckStatus (void) {
 				render.printf("playing..");
 				spr.pushSprite(0,0);
 				spr.deleteSprite(); 
+
 
 			}
 			break;
@@ -601,6 +603,7 @@ void CheckStatus (void) {
 			render.printf("tuning..");
 			spr.pushSprite(0,0);
 			spr.deleteSprite(); 
+			//STREAM_GetFrequency();  doesnt work
 			last_status = status ;
 			break;
 
