@@ -336,8 +336,8 @@ void STREAM_GetProgrameText(unsigned char channel) {
 void GetRssi(void) {
 	const char command[7] = {0xFE, 0x01, 0x17, 0x17, 0x00, 0x00, 0xFD};
 	writeReadUart(command, 7, 100);
-	sprintf(&rssidata[0], "%02u dB", data[6]);
-	rssidata[7] = '\0';
+	sprintf(&rssidata[0], "- %02u dBm", data[6]);
+	rssidata[10] = '\0';
 	spr.createSprite(50, 20);
 	render.setDrawer(spr);
 	render.setFontSize(14);
@@ -379,7 +379,7 @@ void STREAM_GetStereo (void) {
 	render.setCursor(0,0);
 	render.setFontColor(TFT_BROWN);
 	render.printf(rxdata);
-	spr.pushSprite(130,170); 
+	spr.pushSprite(140,170); 
 	spr.deleteSprite(); 
 }
 
@@ -845,7 +845,7 @@ void loop() {
 			spr.pushSprite(0,35);
 			spr.deleteSprite();
 			STREAM_AutoSearch(0x17, 0x28); // leave out low power stations
-			//STREAM_Search(); FM mode
+										   //STREAM_Search(); FM mode
 
 		}
 	}
