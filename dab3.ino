@@ -13,8 +13,8 @@ typedef struct LineNode {
 } LineNode;
 
 // rotary encoder ports
-#define RE_CLK 36 // CLK 
-#define RE_SW  35 // PUSH SWITCH (GPIO22 is pulled up + green LED)
+#define RE_CLK 34 // CLK 
+#define RE_SW  36 // 
 #define RE_DATA 39 // DATA OUT
 #define BACKLIGHT 3
 
@@ -33,8 +33,8 @@ typedef struct LineNode {
 
 // note TX, RX pins are swapped - pcb error
 #define BUF_SIZE 1024
-#define UART_TX_PIN 16
-#define UART_RX_PIN 17
+#define UART_TX_PIN 13
+#define UART_RX_PIN 12
 
 RotaryEncoder *encoder = nullptr;
 static int pos = 0;
