@@ -16,7 +16,7 @@ typedef struct LineNode {
 #define RE_CLK 34 // CLK 
 #define RE_SW  36 // 
 #define RE_DATA 39 // DATA OUT
-#define BACKLIGHT 3
+#define BACKLIGHT 5 // new board
 
 
 //T4B register definitions
@@ -31,7 +31,7 @@ typedef struct LineNode {
 #define i2s_BCLK 0x0A
 #define SPDIF 0x0B
 
-// note TX, RX pins are swapped - pcb error
+
 #define BUF_SIZE 1024
 #define UART_TX_PIN 13
 #define UART_RX_PIN 12
