@@ -1,14 +1,17 @@
-#define USER_SETUP_ID 53 
+/* IPS display with ESP32 wrover devkit 4M + 4M PSRAM*/
+ 
+ 
+#define USER_SETUP_ID 54 
 #define ILI9341_DRIVER
 #define DISABLE_ALL_LIBRARY_WARNINGS
-#define TFT_MISO 19  // (leave TFT SDO disconnected if other SPI devices share MISO)
-#define TFT_MOSI 13
-#define TFT_SCLK 14
-#define TFT_CS    15  // Chip select control pin
-#define TFT_DC    2  // Data Command control pin
-#define TFT_RST   12  // Reset pin (could connect to RST pin)
-//#define TFT_BL   3            // LED back-light control pin
-//#define TFT_BACKLIGHT_ON HIGH  // Level to turn ON back-light (HIGH or LOW)
+
+#define TFT_MOSI 19
+#define TFT_SCLK 18
+#define TFT_CS    23  // Chip select control pin
+#define TFT_DC    21  // Data Command control pin
+#define TFT_RST   22  // Reset pin (could connect to RST pin)
+#define TFT_BL   5            // LED back-light control pin
+#define TFT_BACKLIGHT_ON HIGH  // Level to turn ON back-light (HIGH or LOW)
 
 
 #define LOAD_GLCD    // Font 1. Original Adafruit 8 pixel font needs ~1820 bytes in FLASH
